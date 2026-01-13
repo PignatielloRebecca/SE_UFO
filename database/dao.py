@@ -68,3 +68,6 @@ class DAO:
 
     # nell'ultima query trovo il peso degli avvistamenti degli archi confinanti
 
+
+
+
