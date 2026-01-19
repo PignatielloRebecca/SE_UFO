@@ -5,6 +5,76 @@ from copy import copy
 
 class Model:
     def __init__(self):
+        self._map_nodi={}
+        self.G=nx.Graph()
+
+    def get_all_year(self):
+        lista_anni=set()
+
+        for o in DAO.read_sightings():
+            if o.s_datetime.year>= 1910 and o.s_datetime.year<= 2015:
+                lista_anni.add(o.s_datetime.year)
+        return lista_anni
+
+    def get_all_shape(self):
+        shape=set() # metto un set cosi non mi conta i duplicati
+
+        for o in DAO.read_sightings():
+            shape.add(o.shape)
+        return shape
+    def load_map_nodi(self):
+        for s in DAO.read_all_state():
+            self._map_nodi[s.id]=s
+        return self._map_nodi
+
+
+    def build_graph(self, anno, forma ):
+        #aggiugo i nodi
+        self._map_nodi=self.load_map_nodi()
+
+        lista_nodi=[id for id in self._map_nodi.keys()]
+        self.G.add_nodes_from(lista_nodi)
+
+        vicini=DAO.read_all_vicini(anno,forma)
+        for (s1, s2, p) in vicini:
+            self.G.add_edge(s1, s2, weight=p)
+        return  self.G
+
+    def percorso_semplice(self):
+        self._best_percorso = []
+        self._best_distanza = 0
+
+        for nodo in self.G.nodes():
+            self.__ricorsione(nodo,[nodo], 0, 0)
+        return self._best_percorso, self._best_distanza
+
+
+    def __ricorsione(self,nodo_corrente, lunghezza_parziale, peso_corrente, distanza):
+
+        if distanza > self._best_distanza:
+            self._best_percorso = lunghezza_parziale.copy()
+            self._best_distanza = distanza
+
+        for vicino in self.G.neighbors(nodo_corrente):
+            if vicino in lunghezza_parziale:
+                continue
+            peso=self.G[nodo_corrente][vicino]['weight']
+            if peso<=peso_corrente:
+                continue
+            s1 = self._map_nodi[nodo_corrente]  # oggetto State
+            s2 = self._map_nodi[vicino]
+
+            dist_geo = distance.geodesic(
+                (s1.lat, s1.lng),
+                (s2.lat, s2.lng)).km
+            lunghezza_parziale.append(vicino)
+            self.__ricorsione(vicino, lunghezza_parziale,peso, distanza + dist_geo )
+            lunghezza_parziale.pop()
+
+
+
+"""
+    def __init__(self):
         self._lista_nodi=[]
         self.lista_connessioni=[]
         self.map_connessioni={}
@@ -103,6 +173,8 @@ class Model:
         return dettagli
 
     # in generale metto il return quando la soluzione non soddisfa quei vincoli, quindi taglio il ramo. ui mi volfio solo salvare la soluzione migliore
+    
+"""
 
 
 

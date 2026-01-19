@@ -1,14 +1,22 @@
 import flet as ft
 from database.dao import DAO
 from datetime import datetime
+from geopy import distance
 
 class Controller:
     def __init__(self, view, model):
         self._view = view
         self._model = model
 
-    def populate_dd(self):
+    def populate_dd_year(self):
+        return self._model.get_all_year()
+
+
+    def populate_dd_shape(self):
+        return self._model.get_all_shape()
+
         """ Metodo per popolare i dropdown """
+        """"        
         sighting=DAO.read_sighting()
         lista_anni=[]
         lista_forme=[]
@@ -32,10 +40,34 @@ class Controller:
         self._view.page.update()
 
         # TODO
+    """
 
     def handle_graph(self, e):
         """ Handler per gestire creazione del grafo """
+        anno=int(self._view.dd_year.value )
+        forma=self._view.dd_shape.value
 
+        self._model.build_graph(anno, forma)
+
+        lista_somme=[]
+
+        # per ogni nodo devo mettere la somma=0
+        # non è la somma totale ma per ogni nodo devo fare la somma
+        # visto che mi chiede la somm di entrambi
+        for nodo in self._model.G.nodes():
+            somma=0
+
+            for vicino in self._model.G.neighbors(nodo):
+                peso=self._model.G[nodo][vicino]['weight']
+                somma+=peso
+            lista_somme.append((nodo, somma))
+
+        for (n,s) in lista_somme:
+            self._view.lista_visualizzazione_1.controls.append(ft.Text(f" {n}---> {s} "))
+        self._view.page.update()
+
+
+    """
         lista_somme=[]
         try:
             anno=self._view.dd_year.value
@@ -70,9 +102,35 @@ class Controller:
 
 
         # TODO
+    """
 
     def handle_path(self, e):
         """ Handler per gestire il problema ricorsivo di ricerca del cammino """
+
+        cammino, distanza= self._model.percorso_semplice()
+
+        self._view.lista_visualizzazione_2.controls.append(ft.Text(f"peso totale {distanza}"))
+
+        for i in range(len(cammino)-1):
+            n1=cammino[i]
+            n2=cammino[i+1]
+
+            # per ogni stato mi calcolo il peso
+            peso=self._model.G[n1][n2]['weight']
+
+
+            # la distanza geo
+            s1=self._model._map_nodi[n1]
+            s2=self._model._map_nodi[n2]
+
+            dist_geo = distance.geodesic(
+                (s1.lat, s1.lng),
+                (s2.lat, s2.lng)).km
+
+            self._view.lista_visualizzazione_2.controls.append(ft.Text(f"{n1}---> {n2} con peso {peso} e distanza {dist_geo:.2f} "))
+        self._view.page.update()
+
+    """
 
         # controllare che il grafo dia gia stato creato
 
@@ -108,3 +166,5 @@ class Controller:
 
 # for nodo in self._model.G.nodes() --> itero sui vai nodi
 # self.G.edges(nodo) --> itero sui vari archi--> se metto data = tru mi teine traccia anche del peso
+
+"""

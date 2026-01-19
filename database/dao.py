@@ -4,70 +4,64 @@ from model.sighting import Sighting
 
 class DAO:
     @staticmethod
-    def read_state():
+    def read_sightings():
         conn = DBConnect.get_connection()
 
         result = []
 
         cursor = conn.cursor(dictionary=True)
-        query = """ select *
-                    from state """
+        query = """ select id, s_datetime, shape, latitude,longitude 
+                    from sighting s"""
 
         cursor.execute(query)
 
         for row in cursor:
-            result.append(State(**row)) # in questo modo importo tutta la classe senza ricopiare tutto
+            result.append(Sighting(**row)) # in questo modo importo tutta la classe senza ricopiare tutto
 
         cursor.close()
         conn.close()
         return result
 
     @staticmethod
-    def read_sighting():
+    def read_all_state():
         conn = DBConnect.get_connection()
 
         result = []
 
         cursor = conn.cursor(dictionary=True)
-        query = """ select *
-                    from sighting
-                     ORDER BY s_datetime ASC"""
+        query = """ select id, name, lat, lng
+                    from state s  """
 
         cursor.execute(query)
 
         for row in cursor:
-            result.append(Sighting(**row))  # in questo modo importo tutta la classe senza ricopiare tutto
+            result.append(State(**row))  # in questo modo importo tutta la classe senza ricopiare tutto
 
         cursor.close()
         conn.close()
         return result
+
     @staticmethod
+    def read_all_vicini(anno, forma):
+        conn = DBConnect.get_connection()
 
-    def read_all_connessioni(anno, forma ):
-            conn = DBConnect.get_connection()
+        result = []
 
-            result = []
+        cursor = conn.cursor(dictionary=True)
+        query = """ select state1, state2, count(*) as peso 
+                    from neighbor n, sighting s  
+                    where (n.state1=s.state  or n.state2=s.state) and YEAR(s.s_datetime)=%s
+                    and s.shape=%s
+                    group by state1, state2"""
 
-            cursor = conn.cursor(dictionary=True)
-            query = """SELECT n.state1 AS id1, n.state2 AS id2,
-                        COUNT(s.id) AS peso
-                        FROM neighbor n, sighting s
-                        WHERE (s.state = n.state1 OR s.state = n.state2)
-                        AND YEAR(s.s_datetime) = %s
-                        AND s.shape =%s
-                        GROUP BY n.state1, n.state2 """
+        cursor.execute(query, (anno,forma))
 
-            cursor.execute(query, (anno, forma,))
+        for row in cursor:
+            result.append((row['state1'], row['state2'], row['peso']))  # in questo modo importo tutta la classe senza ricopiare tutto
 
-            for row in cursor:
-                result.append((row["id1"], row["id2"], row["peso"]))  # in questo modo importo tutta la classe senza ricopiare tutto
-
-            cursor.close()
-            conn.close()
-            return result
-
-    # nell'ultima query trovo il peso degli avvistamenti degli archi confinanti
-
+        cursor.close()
+        conn.close()
+        return result
 
 
 

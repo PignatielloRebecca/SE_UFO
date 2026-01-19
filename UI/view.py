@@ -31,11 +31,18 @@ class View:
 
         # Riga 1
         self.dd_year = ft.Dropdown(label="Anno", width=200)
+
+        # popolo la dropdown --> mi ricordo che devo mettere sempre una stringa
+        for y in self.controller.populate_dd_year():
+            self.dd_year.options.append(ft.dropdown.Option(str(y)))
+
         self.dd_shape = ft.Dropdown(label="Forma", width=200)
+        for s in self.controller.populate_dd_shape():
+            self.dd_shape.options.append(ft.dropdown.Option(str(s)))
         self.pulsante_graph = ft.ElevatedButton(text="Crea Grafo", on_click=self.controller.handle_graph)
 
         row1 = ft.Row([self.dd_year, self.dd_shape, self.pulsante_graph],alignment=ft.MainAxisAlignment.CENTER)
-        self.controller.populate_dd()
+        #self.controller.populate_dd()
 
         self.lista_visualizzazione_1 = ft.ListView(expand=1, spacing=10, padding=20, auto_scroll=True)
 
